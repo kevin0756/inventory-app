@@ -3,7 +3,6 @@ import {Route} from 'react-router';
 import { BrowserRouter, Redirect } from 'react-router-dom'
 import './App.css';
 import HomePage from './App.js';
-import IncorporationForm from './ProductsForm.js';
 
 class EditProduct extends Component {
 	constructor() {
@@ -16,18 +15,24 @@ class EditProduct extends Component {
 
 	  // ...
 
-	  handleSubmit = async e => {
-		    e.preventDefault();
-		    const response = await fetch('/api/inventory/update-product-by-id/' + this.props.productId, {
+	  handleSubmit =  e => {
+            e.preventDefault();
+            var status;
+		    fetch('/api/inventory/update-product-by-id/' + this.props.productId, {
 		      method: 'PUT',
 		      headers: {
 		        'Content-Type': 'application/json',
 		      },
 		      body: JSON.stringify({ product_name: this.state.productDetails.product_name })
-		    });
-		    const body = await response.text();
-		    if(response.status == 200)
-		    	this.setState({submitStatus: 'Details Edited Successfully'});
+		    }).then((response) => {status = response.ok;  return response.text()}, error => console.log('error occurred while updating product ' + error)
+            ).then((responseText) => {
+                    if(status)
+                        this.setState({submitStatus: 'Details Edited Successfully'})
+                    else{
+                        console.log('An error occurred ' + responseText)
+                    }
+                }
+                    );
 		  }
 	  
 	  handleProductNameChange = (id) => (evt) => {
@@ -37,14 +42,15 @@ class EditProduct extends Component {
 	  
 	  
 	  
-	  async componentDidMount() {
-		  const response =  await fetch('/api/inventory/fetch-product-by-id/' + this.props.productId, {
+	   componentDidMount() {
+		  fetch('/api/inventory/fetch-product-by-id/' + this.props.productId, {
 			      method: 'GET',
 			      headers: {
 				        'Content-Type': 'application/json',
 				      },
-			    });
-			    this.setState({productDetails: await response.json()});
+			    }).then(response => response.json()).then(
+		    		(jsonData) => this.setState({productDetails: jsonData})
+                    ,(error) => console.log(error));
 		  }
 	  
 	  renderRedirect = (path, id) => {
